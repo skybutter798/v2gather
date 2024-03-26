@@ -1,0 +1,13 @@
+{
+  "Dashboard": "操作后台",
+  "Plan": "配套列表",
+  "Manage Users": "会员列表",
+  "Payment Gateways": "打款系统",
+  "Deposits": "汇款列表",
+  "Withdrawals": "提现列表",
+  "Business Volume (BV)": "对碰分数 (BV)",
+  "Referral Commission": "直推奖金",
+  "Support Ticket": "会员开票",
+  "Report": "报表",
+  "Subscribers":"订户列表"
+}
