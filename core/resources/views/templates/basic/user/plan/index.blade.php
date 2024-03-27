@@ -15,7 +15,7 @@
                                 <li class="justify-content-between plan-card-item d-flex">
                                     <div>
                                         <i class="fas fa-check bg--success"></i>
-                                        <span>@lang('Business Volume (PB)'):
+                                        <span>@lang('app.Business Volume (PB)'):
                                             {{ getAmount($plan->bv) }}
                                         </span>
                                     </div>
@@ -115,18 +115,16 @@
                                 <code class="d-block">@lang('If you subscribe to this one. Your old limitation will reset according to this package.')</code>
                             @endif
                             <label>@lang('Select Wallet')</label>
-                            <select class="form-control" name="wallet_type" required>
-                                <option value="">@lang('Select One')</option>
-                                {{--@if (auth()->user()->balance > 0)
-                                    <option value="deposit_wallet">@lang('Deposit Wallet - ' . $general->cur_sym . showAmount(auth()->user()->balance))</option>
-                                @endif
+                            <div class="form-group">
+                                <label>@lang('Use RP (Max 10% of Plan Price)')</label>
+                                <input type="number" class="form-control" name="rp" id="rpInput" placeholder="0" max="{{ $plan->price * 0.1 }}" required>
+                            </div>
+                            <div class="form-group">
+                                <label>@lang('Use V2P (Up to 100% of Plan Price)')</label>
+                                <input type="number" class="form-control" name="v2p" id="v2pInput" placeholder="0" required readonly>
+                            </div>
+                            <input type="hidden" id="planPrice" value="{{ $plan->price }}">
 
-                                @foreach ($gatewayCurrency as $data)
-                                    <option value="{{ $data->id }}" @selected(old('wallet_type') == $data->method_code) data-gateway="{{ $data }}">{{ $data->name }}</option>
-                                @endforeach--}}
-                                
-                                <option value="rp_wallet">@lang('RP Wallet - ' . $general->cur_sym . showAmount(auth()->user()->RP))</option>
-                            </select>
                             <code class="gateway-info rate-info d-none">@lang('Rate'): 1 {{ $general->cur_text }}
                                 = <span class="rate"></span> <span class="method_currency"></span></code>
                         </div>
@@ -195,9 +193,16 @@
                 $('.gateway-info').addClass('d-none');
                 let modal = $('#BuyModal');
                 let plan = $(this).data('plan')
+                
                 modal.find('.planName').text(plan.name)
                 modal.find('[name=id]').val(plan.id)
                 let planPrice = parseFloat(plan.price).toFixed(2);
+                
+                $('#rpInput').val(0);
+                $('#v2pInput').val(planPrice);
+                $('#planPrice').val(planPrice);
+                $('#v2pInput').attr('max', planPrice);
+                
                 modal.find('[name=amount]').val(planPrice);
                 modal.find('[name=amount]').attr('readonly', true);
 
@@ -235,4 +240,22 @@
             });
         })(jQuery);
     </script>
+    <script>
+    document.getElementById('rpInput').addEventListener('input', function(e) {
+        let rpValue = parseFloat(e.target.value) || 0;
+        let planPrice = parseFloat(document.getElementById('planPrice').value);
+        let maxRp = planPrice * 0.1;
+        let remainingForV2P = planPrice - rpValue;
+        
+        // Ensure RP does not exceed 10% of the plan price
+        if (rpValue > maxRp) {
+            rpValue = maxRp;
+            e.target.value = rpValue;
+        }
+    
+        // Adjust V2P input
+        document.getElementById('v2pInput').value = remainingForV2P > 0 ? remainingForV2P : 0;
+    });
+    </script>
+
 @endpush

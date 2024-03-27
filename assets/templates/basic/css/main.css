@@ -1367,7 +1367,7 @@ option {
 	box-shadow: none;
 	height: 38px;
 	padding: 0 10px;
-	color: white;
+	color: black;
 	border-radius: 5px;
 	font-size: 12px;
 	width: 100%;
@@ -4616,7 +4616,7 @@ div[class*="col"]:nth-of-type(4n + 4) .how__item::after {
 }
 
 .account-form .form--control {
-	color: #fff !important;
+	color: black !important;
   }
 
 .form--control:focus {

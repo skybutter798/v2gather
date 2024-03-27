@@ -28,70 +28,37 @@ class PlanController extends Controller
 		$request->validate([
 			'wallet_type' => 'required',
 			'id'          => 'required',
+			'v2p' => 'required|numeric',
 		]);
         
-		$wallet  = $request->wallet_type;
-		$user    = auth()->user();
+		//$wallet  = $request->wallet_type;
+		//$user    = auth()->user();
 		$oldPlan = $user->plan_id;
-		$plan    = Plan::findOrFail($request->id);
+		//$plan    = Plan::findOrFail($request->id);
+		$user = auth()->user();
+        $plan = Plan::findOrFail($request->id);
+        $planPrice = $plan->price;
+        $maxRpUsage = $planPrice * 0.1; // 10% of plan price for RP
+        $rpInput = min($request->rp, $maxRpUsage); // Ensuring RP does not exceed its max limit
+        $v2pInput = min($request->v2p, $planPrice - $rpInput);
 
 		if ($request->id == $user->plan_id) {
 			$notify[] = ['error', 'You are ready subscribe this plan'];
 			return back()->withNotify($notify);
 		}
 
-		/*if ($wallet != 'deposit_wallet') {
-			$gate = GatewayCurrency::whereHas('method', function ($gate) {
-				$gate->where('status', 1);
-			})->find($request->wallet_type);
-
-			if (!$gate) {
-				$notify[] = ['error', 'Invalid gateway'];
-				return back()->withNotify($notify);
-			}
-
-			if ($gate->min_amount > $request->amount || $gate->max_amount < $request->amount) {
-				$notify[] = ['error', 'Please follow deposit limit'];
-				return back()->withNotify($notify);
-			}
-
-			$data = PaymentController::insertDeposit($gate, $plan);
-
-			session()->put('Track', $data->trx);
-
-			return to_route('user.deposit.confirm');
-		}
 		
-		if ($user->balance < $plan->price) {
-			$notify[] = ['error', 'Oops! You\'ve no sufficient balance'];
-			return back()->withNotify($notify);
-		}*/
-		
-		
-		$walletBalance = 0;
-        $balanceField = '';
-    
-        // Determine the wallet balance and corresponding field
-        if ($wallet == 'wp_wallet') {
-            $walletBalance = $user->balance;
-            $balanceField = 'balance';
-        } elseif ($wallet == 'rp_wallet') {
-            $walletBalance = $user->RP; // Assuming RP is the field name for Reward Points
-            $balanceField = 'RP';
-        } else {
-            $notify[] = ['error', 'Invalid wallet type'];
+        // Check if user has enough RP and V2P
+        if ($user->RP < $rpInput || $user->V2P < $v2pInput) {
+            $notify[] = ['error', 'Insufficient RP or V2P balance.'];
             return back()->withNotify($notify);
         }
         
-        if ($walletBalance < $plan->price) {
-            $notify[] = ['error', 'Oops! You have insufficient balance in your selected wallet'];
-            return back()->withNotify($notify);
-        }
-
-		
-
+        // Deduct the RP and V2P from user's account
+        $user->RP -= $rpInput;
+        $user->V2P -= $v2pInput;
 		$user->plan_id = $plan->id;
-		$user->balance -= $plan->price;
+		//$user->balance -= $plan->price;
 		$user->total_invest += $plan->price;
 		$user->daily_ad_limit = $plan->daily_ad_limit;
 		$user->save();
@@ -99,7 +66,7 @@ class PlanController extends Controller
 		$transaction               = new Transaction();
 		$transaction->user_id      = $user->id;
 		$transaction->amount       = $plan->price;
-		$transaction->post_balance = $user->balance;
+		$transaction->post_balance = $v2pInput;
 		$transaction->trx_type     = '-';
 		$transaction->details      = 'Purchased ' . $plan->name;
 		$transaction->trx          = getTrx();
@@ -111,7 +78,7 @@ class PlanController extends Controller
 			'amount'       => getAmount($plan->price),
 			'currency'     => gs()->cur_text,
 			'trx'          => $transaction->trx,
-			'post_balance' => getAmount($user->balance) . ' ' . gs()->cur_text,
+			'post_balance' => getAmount($v2pInput) . ' ' . gs()->cur_text,
 		]);
 
 		$mlm = new Mlm($user, $plan, $transaction->trx);

@@ -57,7 +57,7 @@ return [
     'Edit' => 'Edit',
     'Disable' => 'Disable',
     'Are you sure to disable this plan?' => 'Are you sure to disable this plan?',
-    'Logout' => 'Logout',
+    'Total Bainary Comission' => 'Total Bainary Comission',
     'Logout' => 'Logout',
     'Logout' => 'Logout',
     'Logout' => 'Logout',
