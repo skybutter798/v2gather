@@ -72,6 +72,9 @@ Route::middleware('admin')->group(function () {
         Route::get('kyc-pending', 'kycPendingUsers')->name('kyc.pending');
         Route::get('mobile-verified', 'mobileVerifiedUsers')->name('mobile.verified');
         Route::get('with-balance', 'usersWithBalance')->name('with.balance');
+        
+        Route::get('/staff', 'allStaff')->name('staff');
+        Route::post('/staff/create', 'createStaff')->name('staff.create');
 
         Route::get('detail/{id}', 'detail')->name('detail');
         Route::get('kyc-data/{id}', 'kycDetails')->name('kyc.details');

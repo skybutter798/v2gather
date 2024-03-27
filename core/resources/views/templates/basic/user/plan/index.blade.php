@@ -19,7 +19,7 @@
                                             {{ getAmount($plan->bv) }}
                                         </span>
                                     </div>
-                                    <span class="plan-icon" data-title="@lang('Business Volume (BV) info')" data-info="@lang('When someone from your below tree subscribe this plan, You will get this Business Volume  which will be used for matching bonus')">
+                                    <span class="plan-icon" data-title="@lang('app.Business Volume (BV) info')" data-info="@lang('app.When someone from your below tree subscribe this plan, You will get this Business Volume  which will be used for matching bonus')">
                                         <i class="fas fa-question-circle"></i>
                                     </span>
                                 </li>
@@ -96,25 +96,27 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <ul class="list-group list-group-flush p-0">
-                                {{--<li class="list-group-item d-flex justify-content-between ps-0">
-                                    <span class="text-dark">@lang('Daily Ads Limit')</span>
-                                    <span class="dailyLimit fw-bold"></span>
-                                </li>--}}
                                 <li class="list-group-item d-flex justify-content-between ps-0">
-                                    <span class="text-dark">@lang('Referral Comission')</span>
+                                    <span class="text-dark">@lang('app.Plan Price')</span>
+                                    <span class="price fw-bold"></span>
+                                </li>
+                                <li class="list-group-item d-flex justify-content-between ps-0">
+                                    <span class="text-dark">@lang('app.Referral Comission')</span>
                                     <span class="refLevel fw-bold"></span>
                                 </li>
-                                {{--<li class="list-group-item d-flex justify-content-between ps-0">
-                                    <span class="text-dark">@lang('Plan Tree Com')</span>
-                                    <span class="validity fw-bold"></span>
-                                </li>--}}
+                                <li class="list-group-item d-flex justify-content-between ps-0">
+                                    <span class="text-dark">@lang('app.Business Volume (BV)')</span>
+                                    <span class="paring fw-bold"></span>
+                                </li>
                             </ul>
                         </div>
                         <div class="form-group">
                             @if (auth()->user()->plan_id)
                                 <code class="d-block">@lang('If you subscribe to this one. Your old limitation will reset according to this package.')</code>
                             @endif
-                            <label>@lang('Select Wallet')</label>
+                            <label>@lang('Current Balance')</label>
+                            <p><strong>V2P: {{ number_format($user->V2P, 2) }} | RP: {{ number_format($user->RP, 2) }} | WP: {{ number_format($user->balance, 2) }}</strong></p>
+                            <br>
                             <div class="form-group">
                                 <label>@lang('Use RP (Max 10% of Plan Price)')</label>
                                 <input type="number" class="form-control" name="rp" id="rpInput" placeholder="0" max="{{ $plan->price * 0.1 }}" required>
@@ -142,8 +144,8 @@
                     </div>
                     <div class="modal-footer">
 
-                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal">@lang('No')</button>
-                        <button type="submit" class="btn btn--primary">@lang('Yes')</button>
+                        <button type="button" class="btn btn--dark" data-bs-dismiss="modal" style="color:white">@lang('app.Cancel')</button>
+                        <button type="submit" class="btn btn--dark" style="color:white">@lang('app.Submit')</button>
 
                     </div>
                 </form>
@@ -208,6 +210,8 @@
 
                 modal.find('.dailyLimit').html(`${plan.daily_ad_limit}`)
                 modal.find('.refLevel').html(`${parseFloat(plan.ref_com).toFixed(2)} {{ $general->cur_text }}`)
+                modal.find('.price').html(`${parseFloat(plan.price).toFixed(2)} {{ $general->cur_text }}`)
+                modal.find('.paring').html(`${parseFloat(plan.bv).toFixed(2)} PB`)
                 modal.find('.validity').html(`${parseFloat(plan.tree_com).toFixed(2)} {{ $general->cur_text }}`)
 
                 $('[name=amount]').on('input', function() {

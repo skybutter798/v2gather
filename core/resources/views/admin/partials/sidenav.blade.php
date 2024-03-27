@@ -1,3 +1,8 @@
+@php
+    $adminId = Auth::guard('admin')->user()->id;
+    $adminRole = Auth::guard('admin')->user()->id;
+@endphp
+
 <div class="sidebar bg--white">
     <button class="res-sidebar-close-btn"><i class="las la-times"></i></button>
     <div class="sidebar__inner">
@@ -14,7 +19,8 @@
                         <span class="menu-title">@lang('Dashboard')</span>
                     </a>
                 </li>
-
+                
+                @if($adminRole == 1)
                 <li class="sidebar-menu-item  {{ menuActive('admin.plan.*') }}">
                     <a href="{{ route('admin.plan.index') }}" class="nav-link"
                         data-default-url="{{ route('admin.plan.index') }}">
@@ -30,7 +36,15 @@
                         <span class="menu-title">@lang('PTC Ads') </span>
                     </a>
                 </li>--}}
-
+                
+                <li class="sidebar-menu-item  {{ menuActive('admin.users.staff') }}">
+                    <a href="{{ route('admin.users.staff') }}" class="nav-link" data-default-url="{{ route('admin.users.staff') }}">
+                        <i class="menu-icon las la-link"></i>
+                        <span class="menu-title">@lang('Manage Staff')</span>
+                    </a>
+                </li>
+                @endif
+                
                 <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{ menuActive('admin.users*', 3) }}">
                         <i class="menu-icon las la-users"></i>
@@ -134,7 +148,8 @@
                         </ul>
                     </div>
                 </li>
-
+                
+                @if($adminRole == 1)
                 <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{ menuActive('admin.gateway*', 3) }}">
                         <i class="menu-icon las la-credit-card"></i>
@@ -159,6 +174,7 @@
                         </ul>
                     </div>
                 </li>
+                @endif
 
                 <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{ menuActive('admin.deposit*', 3) }}">
@@ -391,30 +407,30 @@
                 </li>
 
 
-                <li class="sidebar-menu-item  {{ menuActive('admin.subscriber.*') }}">
+                {{--<li class="sidebar-menu-item  {{ menuActive('admin.subscriber.*') }}">
                     <a href="{{ route('admin.subscriber.index') }}" class="nav-link"
                         data-default-url="{{ route('admin.subscriber.index') }}">
                         <i class="menu-icon las la-thumbs-up"></i>
                         <span class="menu-title">@lang('Subscribers') </span>
                     </a>
-                </li>
+                </li>--}}
 
-
+                @if($adminRole == 1)
                 <li class="sidebar__menu-header">@lang('Settings')</li>
 
-                <li class="sidebar-menu-item {{ menuActive('admin.setting.index') }}">
+                {{--<li class="sidebar-menu-item {{ menuActive('admin.setting.index') }}">
                     <a href="{{ route('admin.setting.index') }}" class="nav-link">
                         <i class="menu-icon las la-life-ring"></i>
                         <span class="menu-title">@lang('General Setting')</span>
                     </a>
                 </li>
 
-                {{--<li class="sidebar-menu-item {{ menuActive('admin.setting.system.configuration') }}">
+                <li class="sidebar-menu-item {{ menuActive('admin.setting.system.configuration') }}">
                     <a href="{{ route('admin.setting.system.configuration') }}" class="nav-link">
                         <i class="menu-icon las la-cog"></i>
                         <span class="menu-title">@lang('System Configuration')</span>
                     </a>
-                </li>--}}
+                </li>
 
                 <li class="sidebar-menu-item {{ menuActive('admin.matching.bonus') }}">
                     <a href="{{ route('admin.matching.bonus') }}" class="nav-link">
@@ -423,7 +439,7 @@
                     </a>
                 </li>
 
-                {{--<li class="sidebar-menu-item {{ menuActive('admin.setting.logo.icon') }}">
+                <li class="sidebar-menu-item {{ menuActive('admin.setting.logo.icon') }}">
                     <a href="{{ route('admin.setting.logo.icon') }}" class="nav-link">
                         <i class="menu-icon las la-images"></i>
                         <span class="menu-title">@lang('Logo & Favicon')</span>
@@ -435,7 +451,7 @@
                         <i class="menu-icon las la-cogs"></i>
                         <span class="menu-title">@lang('Extensions')</span>
                     </a>
-                </li>--}}
+                </li>
 
                 <li class="sidebar-menu-item  {{ menuActive(['admin.language.manage', 'admin.language.key']) }}">
                     <a href="{{ route('admin.language.manage') }}" class="nav-link"
@@ -445,7 +461,7 @@
                     </a>
                 </li>
 
-                {{--<li class="sidebar-menu-item {{ menuActive('admin.seo') }}">
+                <li class="sidebar-menu-item {{ menuActive('admin.seo') }}">
                     <a href="{{ route('admin.seo') }}" class="nav-link">
                         <i class="menu-icon las la-globe"></i>
                         <span class="menu-title">@lang('SEO Manager')</span>
@@ -493,7 +509,7 @@
                     </div>
                 </li>
 
-                <li class="sidebar__menu-header">@lang('Frontend Manager')</li>
+                {{--<li class="sidebar__menu-header">@lang('Frontend Manager')</li>
 
                 <li class="sidebar-menu-item {{ menuActive('admin.frontend.templates') }}">
                     <a href="{{ route('admin.frontend.templates') }}" class="nav-link ">
@@ -531,7 +547,7 @@
                             @endforeach
                         </ul>
                     </div>
-                </li>
+                </li>--}}
 
                 <li class="sidebar__menu-header">@lang('Extra')</li>
 
@@ -544,7 +560,7 @@
                 </li>
 
 
-                <li class="sidebar-menu-item {{ menuActive('admin.setting.cookie') }}">
+                {{--<li class="sidebar-menu-item {{ menuActive('admin.setting.cookie') }}">
                     <a href="{{ route('admin.setting.cookie') }}" class="nav-link">
                         <i class="menu-icon las la-cookie-bite"></i>
                         <span class="menu-title">@lang('GDPR Cookie')</span>
@@ -578,7 +594,7 @@
                             </li>
                         </ul>
                     </div>
-                </li>
+                </li>--}}
                 <li class="sidebar-menu-item  {{ menuActive('admin.request.report') }}">
                     <a href="{{ route('admin.request.report') }}" class="nav-link"
                         data-default-url="{{ route('admin.request.report') }}">
@@ -586,17 +602,15 @@
                         <span class="menu-title">@lang('Report & Request') </span>
                     </a>
                 </li>
-                <li class="sidebar-menu-item {{ menuActive('admin.setting.custom.css') }}">
+                {{--<li class="sidebar-menu-item {{ menuActive('admin.setting.custom.css') }}">
                     <a href="{{ route('admin.setting.custom.css') }}" class="nav-link">
                         <i class="menu-icon lab la-css3-alt"></i>
                         <span class="menu-title">@lang('Custom CSS')</span>
                     </a>
-                </li>
+                </li>--}}
+                @endif
+                
             </ul>
-            <div class="text-center mb-3 text-uppercase">
-                <span class="text--primary">{{ __(systemDetails()['name']) }}</span>
-                <span class="text--success">@lang('V'){{ systemDetails()['version'] }} </span>
-            </div>
         </div>
     </div>
 </div>

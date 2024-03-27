@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Validator;
 
+use App\Models\Admin;
+
 class ManageUsersController extends Controller
 {
 
@@ -24,6 +26,44 @@ class ManageUsersController extends Controller
         $users     = $this->userData();
         return view('admin.users.list', compact('pageTitle', 'users'));
     }
+    
+    public function allStaff()
+    {
+        $pageTitle = 'All Staffs';
+        // Use paginate instead of all to enable pagination.
+        $staffs = Admin::paginate(10); // Example: paginate 10 items per page.
+        return view('admin.staff.index', compact('pageTitle', 'staffs'));
+    }
+    
+    public function createStaff(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:admins,email',
+            'username' => 'required|string|max:255|unique:admins,username',
+            'role' => 'required|in:1,2',
+            'password' => 'required|string|min:8',
+        ]);
+    
+        // Attempt to find an admin with the same email or username. If not found, create a new one.
+        $admin = Admin::firstOrCreate(
+            ['email' => $request->email], // Conditions to check
+            [
+                'name' => $request->name, // Additional values to use for creation
+                'username' => $request->username,
+                'role' => $request->role,
+                'password' => bcrypt($request->password),
+            ]
+        );
+    
+        if ($admin->wasRecentlyCreated) {
+            // wasRecentlyCreated is true if the model was created, false if it was retrieved
+            return back()->with('success', 'New staff added successfully.');
+        } else {
+            return back()->with('info', 'The staff already exists.');
+        }
+    }
+
 
     public function activeUsers()
     {

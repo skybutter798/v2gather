@@ -15,12 +15,14 @@ class PlanController extends Controller
 {
 	public function index()
 	{
+	    $user    = auth()->user();
+
 		$pageTitle       = "Plans";
 		$plans           = Plan::active()->orderBy('price')->paginate(getPaginate());
 		$gatewayCurrency = GatewayCurrency::whereHas('method', function ($gate) {
 			$gate->where('status', 1);
 		})->with('method')->orderby('name')->get();
-		return view($this->activeTemplate . 'user.plan.index', compact('pageTitle', 'plans', 'gatewayCurrency'));
+		return view($this->activeTemplate . 'user.plan.index', compact('pageTitle', 'plans', 'gatewayCurrency', 'user'));
 	}
 
 	public function subscribe(Request $request)
