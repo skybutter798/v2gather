@@ -35,13 +35,13 @@
                     <x-widget style="3" icon="las la-eye" title="Total PTC show" value="{{ $data['ptcShow'] }}" bg="16" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
-                    <x-widget style="3" link="{{ route('admin.report.bvLog') }}?search={{ $user->username }}&type=leftBV" icon="las la-arrow-alt-circle-left" title="Left Bv" value="{{ getAmount(@$user->userExtra->bv_left) }}" bg="17" />
+                    <x-widget style="3" link="{{ route('admin.report.bvLog') }}?search={{ $user->username }}&type=leftBV" icon="las la-arrow-alt-circle-left" title="Left PB" value="{{ getAmount(@$user->userExtra->bv_left) }}" bg="17" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
-                    <x-widget style="3" link="{{ route('admin.report.bvLog') }}?search={{ $user->username }}&type=rightBV" icon="las la-arrow-alt-circle-right" title="Right Bv" value="{{ getAmount(@$user->userExtra->bv_right) }}" bg="18" />
+                    <x-widget style="3" link="{{ route('admin.report.bvLog') }}?search={{ $user->username }}&type=rightBV" icon="las la-arrow-alt-circle-right" title="Right PB" value="{{ getAmount(@$user->userExtra->bv_right) }}" bg="18" />
                 </div>
                 <div class="col-xxl-3 col-sm-6">
-                    <x-widget style="3" icon="las la-exchange-alt" link="{{ route('admin.report.bvLog') }}?search={{ $user->username }}" title="Total BV" value="{{ getAmount($totalBv) }}" bg="19" />
+                    <x-widget style="3" icon="las la-exchange-alt" link="{{ route('admin.report.bvLog') }}?search={{ $user->username }}" title="Total PB" value="{{ getAmount($totalBv) }}" bg="19" />
                 </div>
             </div>
 

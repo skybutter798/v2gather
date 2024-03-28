@@ -152,13 +152,13 @@ class PaymentController extends Controller
             $deposit->save();
 
             $user = User::find($deposit->user_id);
-            $user->balance += $deposit->amount;
+            $user->V2P += $deposit->amount;
             $user->save();
 
             $transaction = new Transaction();
             $transaction->user_id = $deposit->user_id;
             $transaction->amount = $deposit->amount;
-            $transaction->post_balance = $user->balance;
+            $transaction->post_balance = $user->V2P;
             $transaction->charge = $deposit->charge;
             $transaction->trx_type = '+';
             $transaction->details = 'Deposit Via ' . $deposit->gatewayCurrency()->name;
@@ -168,7 +168,7 @@ class PaymentController extends Controller
 
             $oldPlan = auth()->user()->plan_id;
             if ($deposit->plan_id) {
-                $user->balance -= $deposit->plan->price;
+                $user->V2P -= $deposit->plan->price;
                 $user->total_invest += $deposit->plan->price;
                 $user->daily_ad_limit = $deposit->plan->daily_ad_limit;
                 $user->plan_id     = $deposit->plan_id;
@@ -177,7 +177,7 @@ class PaymentController extends Controller
                 $transaction               = new Transaction();
                 $transaction->user_id      = $user->id;
                 $transaction->amount       = $deposit->plan->price;
-                $transaction->post_balance = $user->balance;
+                $transaction->post_balance = $user->V2P;
                 $transaction->trx_type     = '-';
                 $transaction->details      = 'Purchased ' . $deposit->plan->name;
                 $transaction->trx          = getTrx();
@@ -189,7 +189,7 @@ class PaymentController extends Controller
                     'amount'       => getAmount($deposit->price),
                     'currency'     => gs()->cur_text,
                     'trx'          => $transaction->trx,
-                    'post_balance' => getAmount($user->balance) . ' ' . gs()->cur_text,
+                    'post_balance' => getAmount($user->V2P) . ' ' . gs()->cur_text,
                 ]);
 
                 $mlm = new Mlm($user, $deposit->plan, $transaction->trx);
@@ -223,7 +223,7 @@ class PaymentController extends Controller
                 'charge' => showAmount($deposit->charge),
                 'rate' => showAmount($deposit->rate),
                 'trx' => $deposit->trx,
-                'post_balance' => showAmount($user->balance)
+                'post_balance' => showAmount($user->V2P)
             ]);
         }
     }

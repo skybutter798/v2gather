@@ -141,7 +141,7 @@ class Mlm
 
             $extra->save();
             $bvlog->amount  = $bv;
-            $bvlog->details = 'BV from ' . auth()->user()->username;
+            $bvlog->details = 'PB from ' . auth()->user()->username;
             $bvlog->save();
 
             $user = $upper;
@@ -514,57 +514,59 @@ class Mlm
      * @return string
      */
     public function showSingleUserinTree($user, $isAdmin = false)
-    {
-        $html = '';
-        if ($user) {
-            if ($user->plan_id == 0) {
-                $userType = "free-user";
-                $stShow   = "Free";
-                $planName = '';
-            } else {
-                $userType = "paid-user";
-                $stShow   = "Paid";
-                $planName = @$user->plan->name;
-            }
-
-            $img   = getImage(getFilePath('userProfile') . '/' . $user->image);
-            $refby = @$user->referrer->fullname ?? '';
-
-            if ($isAdmin) {
-                $hisTree = route('admin.users.binary.tree', $user->username);
-            } else {
-                $hisTree = route('user.binary.tree', $user->username);
-            }
-
-            $extraData = " data-name=\"$user->username\"";
-            $extraData .= " data-treeurl=\"$hisTree\"";
-            $extraData .= " data-status=\"$stShow\"";
-            $extraData .= " data-plan=\"$planName\"";
-            $extraData .= " data-image=\"$img\"";
-            $extraData .= " data-refby=\"$refby\"";
-            $extraData .= " data-lpaid=\"" . @$user->userExtra->paid_left . "\"";
-            $extraData .= " data-rpaid=\"" . @$user->userExtra->paid_right . "\"";
-            $extraData .= " data-lfree=\"" . @$user->userExtra->free_left . "\"";
-            $extraData .= " data-rfree=\"" . @$user->userExtra->free_right . "\"";
-            $extraData .= " data-lbv=\"" . showAmount(@$user->userExtra->bv_left) . "\"";
-            $extraData .= " data-rbv=\"" . showAmount(@$user->userExtra->bv_right) . "\"";
-
-            $html .= "<div class=\"user showDetails\" type=\"button\" $extraData>";
-            $html .= "<img src=\"$img\" alt=\"*\"  class=\"$userType\">";
-            $html .= "<p class=\"user-name\" data-username=\"$user->username\">$user->username</p>";
+{
+    $html = '';
+    if ($user) {
+        if ($user->plan_id == 0) {
+            $userType = "free-user";
+            $stShow   = "Free";
+            $planName = '';
         } else {
-            $img = getImage('assets/images/nouser.png');
-
-            $html .= "<div class=\"user\" type=\"button\">";
-            $html .= "<img src=\"$img\" alt=\"*\"  class=\"no-user\">";
-            $html .= "<p class=\"user-name\">No User</p>";
+            $userType = "paid-user";
+            $stShow   = "Paid";
+            $planName = @$user->plan->name;
         }
 
-        $html .= " </div>";
-        $html .= " <span class=\"line\"></span>";
+        $img   = getImage(getFilePath('userProfile') . '/' . $user->image);
+        $refby = @$user->referrer->fullname ?? '';
 
-        return $html;
+        if ($isAdmin) {
+            $hisTree = route('admin.users.binary.tree', $user->username);
+        } else {
+            $hisTree = route('user.binary.tree', $user->username);
+        }
+
+        $extraData = " data-name=\"$user->username\"";
+        $extraData .= " data-treeurl=\"$hisTree\"";
+        $extraData .= " data-status=\"$stShow\"";
+        $extraData .= " data-plan=\"$planName\"";
+        $extraData .= " data-image=\"$img\"";
+        $extraData .= " data-refby=\"$refby\"";
+        $extraData .= " data-lpaid=\"" . @$user->userExtra->paid_left . "\"";
+        $extraData .= " data-rpaid=\"" . @$user->userExtra->paid_right . "\"";
+        $extraData .= " data-lfree=\"" . @$user->userExtra->free_left . "\"";
+        $extraData .= " data-rfree=\"" . @$user->userExtra->free_right . "\"";
+        $extraData .= " data-lbv=\"" . showAmount(@$user->userExtra->bv_left) . "\"";
+        $extraData .= " data-rbv=\"" . showAmount(@$user->userExtra->bv_right) . "\"";
+
+        $html .= "<div class=\"user showDetails\" type=\"button\" $extraData>";
+        $html .= "<img src=\"$img\" alt=\"*\"  class=\"$userType\">";
+        $html .= "<p class=\"user-name\" data-username=\"$user->username\">$user->username</p>";
+    } else {
+        $img = getImage('assets/images/nouser.png');
+
+        $html .= "<div class=\"user\" type=\"button\">";
+        $html .= "<img src=\"$img\" alt=\"*\"  class=\"no-user\">";
+        $html .= "<p class=\"user-name\">No User</p>";
     }
+
+    // Moved outside the if-else structure to ensure it is always added
+    $html .= " </div>";
+    $html .= " <span class=\"line\"></span>";
+
+    return $html;
+}
+
 
     /**
      * Get the mlm hands for tree

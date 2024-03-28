@@ -9,7 +9,7 @@
                             <thead>
                                 <tr>
                                     <th>@lang('Sl')</th>
-                                    <th>@lang('BV')</th>
+                                    <th>@lang('app.BV')</th>
                                     <th>@lang('Position')</th>
                                     <th>@lang('Detail')</th>
                                     <th>@lang('Date')</th>

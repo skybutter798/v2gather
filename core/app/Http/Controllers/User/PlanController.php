@@ -28,16 +28,18 @@ class PlanController extends Controller
 	public function subscribe(Request $request)
 	{
 		$request->validate([
-			'wallet_type' => 'required',
+			
 			'id'          => 'required',
 			'v2p' => 'required|numeric',
 		]);
         
 		//$wallet  = $request->wallet_type;
 		//$user    = auth()->user();
-		$oldPlan = $user->plan_id;
+		//$oldPlan = $user->plan_id;
 		//$plan    = Plan::findOrFail($request->id);
+		
 		$user = auth()->user();
+		$oldPlan = $user->plan_id;
         $plan = Plan::findOrFail($request->id);
         $planPrice = $plan->price;
         $maxRpUsage = $planPrice * 0.1; // 10% of plan price for RP
@@ -103,7 +105,7 @@ class PlanController extends Controller
 
 	public function bvLog(Request $request)
 	{
-		$pageTitle = "BV LOG";
+		$pageTitle = "PB LOG";
 		$bvLogs    = BvLog::where('user_id', auth()->id());
 
 		if ($request->type) {

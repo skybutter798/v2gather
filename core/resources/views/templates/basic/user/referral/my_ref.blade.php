@@ -21,6 +21,7 @@
                             <div class="user register-spot" style="cursor: pointer;" data-bs-toggle="" data-bs-target="#registerUserModal" data-spot-id="{{ $spotId }}" data-parent-id="{{ $parentId }}" data-position="{{ $leftOrRight }}">
                                 <img src="{{ asset('assets/images/default.png') }}" alt="*" class="no-user">
                                 <p class="user-name">[+]</p>
+                                <span class="line"></span>
                             </div>
                             
                         @else
@@ -113,7 +114,7 @@
                     <form id="registrationForm" class="account-form verify-gcaptcha" method="post" action="{{ route('user.registerdownline') }}">
                         @csrf
                         <div class="form-group">
-                            <label for="modalReferralUsername">@lang('Direcft Sponsor')</label>
+                            <label for="modalReferralUsername">@lang('app.Direct Sponsor')</label>
                             <input type="text" class="form-control" id="modalReferralUsername" name="referral" required readonly>
                         </div>
                         
