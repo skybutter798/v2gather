@@ -1,44 +1,33 @@
 @extends($activeTemplate . 'layouts.master')
+<style>
+    .arrow {
+        cursor: pointer;
+        font-size: 12px; /* Adjust size as needed */
+        margin-top: 5px;
+    }
+    
+    .child-node {
+        align-items: center;
+        display: flex;
+        flex-direction: column;
+    }
+
+</style>
 @section('content')
     <div class="card">
-        @php
-            $loopNumber = 1;
-            $totalLoop = 0;
-            $spotId = 1;
-        @endphp
-        
-        @for ($i = 1; $i <= 4; $i++)
-            <div class="row justify-content-center llll text-center">
-                @for ($in = 1; $in <= $loopNumber; $in++)
-                    @php
-                        $leftOrRight = ($spotId % 2 == 0) ? '1' : '2';
-                        $parentId = intdiv($spotId, 2);
-                    @endphp
-                    
-                    <div class="w-{{ $loopNumber }}" data-spot-id="{{ $spotId }}" data-parent-id="{{ $parentId }}" data-position="{{ $leftOrRight }}">
-                        @if (is_null($tree[$mlm->getHands()[$totalLoop]]) || empty($tree[$mlm->getHands()[$totalLoop]]))
-                            
-                            <div class="user register-spot" style="cursor: pointer;" data-bs-toggle="" data-bs-target="#registerUserModal" data-spot-id="{{ $spotId }}" data-parent-id="{{ $parentId }}" data-position="{{ $leftOrRight }}">
-                                <img src="{{ asset('assets/images/default.png') }}" alt="*" class="no-user">
-                                <p class="user-name">[+]</p>
-                                <span class="line"></span>
-                            </div>
-                            
-                        @else
-                            @php echo $mlm->showSingleUserinTree($tree[$mlm->getHands()[$totalLoop]]); @endphp
-                        @endif
-                    </div>
-                    
-                    @php
-                        $totalLoop++;
-                        $spotId++; // Increment spotId for each spot
-                    @endphp
-                @endfor
-                
+        <div class="row justify-content-center llll text-center" style="overflow:auto; max-height: 500px;">
+            <!-- Root node -->
+            <div id="treeRoot" class="w-1 child-node" data-spot-id="{{ auth()->user()->id }}" data-parent-id="0" data-position="root">
+                <div class="user register-spot" style="cursor: pointer;" data-bs-toggle="" data-bs-target="#registerUserModal">
+                    <img src="{{ asset('assets/images/default.png') }}" alt="*" class="no-user">
+                    <p class="user-name"><strong>{{ auth()->user()->username }}</strong></p> <!-- Change made here -->
+                </div>
+                <div class="arrow" style="cursor: pointer;">▼</div>
             </div>
-            @php $loopNumber *= 2; @endphp
-            
-        @endfor
+
+
+
+        </div>
     </div>
 
     <div class="modal fade user-details-modal-area" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
@@ -125,9 +114,9 @@
                         
                         <div class="form-group">
                             <label for="modalPosition">@lang('Position')</label>
-                            <select class="form-control" id="modalPosition" required disabled>
-                                <option value="1">@lang('Left')</option>
-                                <option value="2">@lang('Right')</option>
+                            <select class="form-control" id="modalPosition" required disabled readonly>
+                                <option value="1" disabled readonly>@lang('Left')</option>
+                                <option value="2" disabled readonly>@lang('Right')</option>
                             </select>
                             <input type="hidden" name="position" id="hiddenPosition" value="">
                         </div>
@@ -209,54 +198,164 @@
         })(jQuery);
         
         var currentUserId = "{{ auth()->user()->id }}";
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            document.querySelectorAll('.user.register-spot').forEach(function(spot) {
-                spot.addEventListener('click', function() {
-                    var parentSpot = this.closest('[data-spot-id]').getAttribute('data-parent-id');
-                    var parentElement = document.querySelector('[data-spot-id="' + parentSpot + '"] .user-name');
-                    
-                    if (parentElement) {
-                        var parentUsername = parentElement.getAttribute('data-username') || parentElement.textContent;
-                    } else {
-                        alert('Parent user not found.');
-                    }
-                });
+
+        $(document).ready(function() {
+            $(document).on('click', '.user.register-spot', function() {
+                var $closestNode = $(this).closest('.child-node');
+                var spotId = $closestNode.data('spot-id');
+                var parentId = $closestNode.data('parent-id');
+                var position = $closestNode.data('position');
+                
+                console.log('Spot ID:', spotId);
+                console.log('Parent ID:', parentId);
+                console.log('Position:', position);
+
+            
+                // Check if position is defined to prevent errors
+                if (typeof position !== 'undefined') {
+                    position = position.toString();
+                } else {
+                    // Handle the case where position is undefined
+                    console.log('Position is undefined. Ensure this spot has a defined position.');
+                    return; // Exit the function or handle appropriately
+                }
+            
+                if ($(this).hasClass('empty')) {
+                    // Logic for empty spot click
+                    showRegisterFormWithCorrectUpline(parentId, position);
+                } else {
+                    showUserDetails(spotId);
+                }
             });
-        });
 
-        $('.register-spot').on('click', function() {
-            var spotId = $(this).data('spot-id');
-            var parentId = $(this).data('parent-id');
-            var position = String($(this).data('position'));
-            var positionText = position === '1' ? 'Left' : 'Right';
+            
+        function showRegisterFormWithCorrectUpline(parentId, position) {
+            console.log("parent: ", parentId);
+            
             var currentUserUsername = "{{ auth()->user()->username }}";
-            var selectElement = document.getElementById('modalPosition');
-    
-            // Set modal fields
-            $('#modalReferralUsername').val(currentUserUsername);
-            $('#modalPosition').val(positionText);
-            $('#hiddenPosition').val(position);
-            selectElement.value = position;
+            console.log("Current User Username:", currentUserUsername);
             
+            // Fetch the parent node to get the correct upline username
+            var uplineUserElement = $(`[data-spot-id="${parentId}"]`);
+            console.log("Upline User Element:", uplineUserElement);
+            
+            var uplineUsername = uplineUserElement.find('.user-name').first().text().trim();
+            console.log("Upline Username:", uplineUsername);
+            
+            // Set form values
+            $('#modalReferralUsername').val(currentUserUsername); // Direct Sponsor
+            $('#pusername').val(uplineUsername); // Upline Tree
+            $('#modalPosition').prop('disabled', false).val(position); // Position, enabling the dropdown for clarity
+            $('#hiddenPosition').val(position); // Hidden input for form submission
+            
+            $('#registerUserModal').modal('show');
+        }
 
-            
-            var parentElement = $('[data-spot-id="' + parentId + '"]').find('.user-name');
-            var parentUsername = parentElement.data('username') || parentElement.text(); // Retrieve username
-            $('#pusername').val(parentUsername);
+        function showUserDetails(spotId) {
+    $.ajax({
+        url: '/user/user-details/' + spotId, // Make sure this URL matches your actual API endpoint
+        type: 'GET',
+        success: function(response) {
+            console.log("AJAX success response:", response);
         
-            if (parentUsername !== '[+]') {
-                $('#registerUserModal').modal('show');
-            } else {
-                console.log('Parent username is empty, modal not shown.');
+            if (response.user.user_extra) {
+                $('.lbv').text(response.user.user_extra.bv_left || '0');
+                $('.rbv').text(response.user.user_extra.bv_right || '0');
+                $('.lpaid').text(response.user.user_extra.paid_left || '0');
+                $('.rpaid').text(response.user.user_extra.paid_right || '0');
+                $('.lfree').text(response.user.user_extra.free_left || '0');
+                $('.rfree').text(response.user.user_extra.free_right || '0');
             }
+        
+            // Update the referrer username display
+            if (response.referrerUsername) {
+                $('.tree_ref').text(response.referrerUsername);
+            } else {
+                $('.tree_ref').text('N/A');
+            }
+        
+            $('#exampleModalCenter').modal('show');
+        },
 
-            console.log('Parent ID:', parentId);
-            console.log('Current User Username:', currentUserUsername);
-            console.log('Clicked Spot ID:', spotId);
-            console.log('Parent User:', parentUsername); // Now correctly logs the parent's username
-            console.log('Position (Left or Right):', positionText);
+
+        error: function(xhr, status, error) {
+            console.error("Error fetching user details: ", error);
+        }
+    });
+}
+
+
+
+
+        $(document).on('click', '.arrow', function() {
+            var $node = $(this).closest('.child-node');
+            var userId = $node.data('spot-id');
+        
+            // Toggle visibility if already loaded
+            if ($node.hasClass('loaded')) {
+                $node.find('> .children-container').toggle();
+                // Update the arrow based on visibility
+                updateArrowState($(this), $node.find('> .children-container').is(':visible'));
+                return;
+            }
+        
+            // AJAX call to fetch children
+            var fetchChildrenUrl = '/user/fetch-children/' + userId;
+        
+            $.ajax({
+                url: fetchChildrenUrl,
+                type: 'GET',
+                success: function(response) {
+                    console.log("Success response: ", response);
             
+                    var leftChildId = response.children.left ? response.children.left.id : userId;
+                    var rightChildId = response.children.right ? response.children.right.id : userId;
+            
+                    var childrenHtml = '<div class="children-container" style="display: flex;">';
+                    childrenHtml += generateUserHtml(response.children.left || null, '1', leftChildId); // Pass user ID for left child
+                    childrenHtml += generateUserHtml(response.children.right || null, '2', rightChildId); // Pass user ID for right child if exists
+                    childrenHtml += '</div>';
+            
+                    console.log("Left child ID:", leftChildId); // Log left child ID
+                    console.log("Right child ID:", rightChildId); // Log right child ID
+            
+                    $node.append(childrenHtml);
+                    $node.addClass('loaded');
+                    updateArrowState($node.find('.arrow'), true);
+                },
+            });
+
+
         });
+        
+        function generateUserHtml(user, position, userId) {
+            if (!user) {
+                return `<div class="child-node empty-spot" style="align-items: center; display: flex; flex-direction: column; margin: 5px;"
+                         data-position="${position}" data-parent-id="${userId}">
+                    <div class="user register-spot empty" data-empty="true" style="cursor: pointer;">
+                        <img src="https://v2gather.org/assets/images/default.png" alt="Empty Spot" class="empty-user">
+                        <p class="user-name">[+]</p>
+                    </div>
+                </div>`;
+            } else {
+                return `<div class="child-node" data-spot-id="${userId}" data-position="${position}" style="align-items: center; display: flex; flex-direction: column; margin: 5px;">
+                    <div class="user register-spot" style="cursor: pointer;" data-spot-id="${userId}">
+                        <img src="{{ asset('assets/images/default.png') }}" alt="*" class="no-user">
+                        <p class="user-name" style="font-size: 10px; !important">${user.username}</p>
+                    </div>
+                    <div class="arrow" style="cursor: pointer;">▼</div>
+                </div>`;
+            }
+        }
+        
+        function updateArrowState($arrow, isVisible) {
+            if (isVisible) {
+                $arrow.text('▲');
+            } else {
+                $arrow.text('▼');
+            }
+        }
+    });
     </script>
+
 @endpush

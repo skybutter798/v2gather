@@ -558,5 +558,41 @@ class UserController extends Controller
             return response()->json(['error' => 'User not found'], 404);
         }
     }
+    
+    public function fetchChildren($userId)
+    {
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+    
+        // Create an instance of the Mlm class
+        $mlm = new Mlm();
+    
+        // Call the showTreePage method on the Mlm instance
+        $children = $mlm->showTreePage($user);
+    
+        return response()->json(['children' => $children]);
+    }
+    
+    public function showUserDetails($id)
+    {
+        // Fetch the user along with the userExtra and the referrer's username
+        $user = User::with(['userExtra', 'referrer'])->find($id);
+        
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
+    
+        // Assuming the referrer relationship is named 'referrer' and it correctly fetches the user who referred this user
+        // We also assume the 'referrer' relationship resolves to a User model that has a 'username' field
+        $referrerUsername = $user->referrer->username ?? null;
+    
+        return response()->json([
+            'user' => $user->toArray(),
+            'referrerUsername' => $referrerUsername,
+        ]);
+    }
+
 
 }

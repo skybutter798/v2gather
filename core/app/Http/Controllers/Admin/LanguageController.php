@@ -17,6 +17,12 @@ class LanguageController extends Controller
         $languages = Language::orderBy('is_default', 'desc')->get();
         return view('admin.language.lang', compact('pageTitle', 'languages'));
     }
+    
+    public function switchLang($lang)
+    {
+        session()->put('lang', $lang);
+        return back();
+    }
 
     public function langStore(Request $request)
     {

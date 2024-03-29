@@ -509,9 +509,9 @@
                     </div>
                 </li>
 
-                {{--<li class="sidebar__menu-header">@lang('Frontend Manager')</li>
+                <li class="sidebar__menu-header">@lang('Frontend Manager')</li>
 
-                <li class="sidebar-menu-item {{ menuActive('admin.frontend.templates') }}">
+                {{--<li class="sidebar-menu-item {{ menuActive('admin.frontend.templates') }}">
                     <a href="{{ route('admin.frontend.templates') }}" class="nav-link ">
                         <i class="menu-icon la la-html5"></i>
                         <span class="menu-title">@lang('Manage Templates')</span>
@@ -523,7 +523,7 @@
                         <i class="menu-icon la la-list"></i>
                         <span class="menu-title">@lang('Manage Pages')</span>
                     </a>
-                </li>
+                </li>--}}
 
                 <li class="sidebar-menu-item sidebar-dropdown">
                     <a href="javascript:void(0)" class="{{ menuActive('admin.frontend.sections*', 3) }}">
@@ -547,7 +547,7 @@
                             @endforeach
                         </ul>
                     </div>
-                </li>--}}
+                </li>
 
                 <li class="sidebar__menu-header">@lang('Extra')</li>
 

@@ -83,6 +83,10 @@ Route::middleware('auth')->name('user.')->group(function () {
                 Route::get('/tree/{user}', 'binaryTree')->name('binary.tree');
                 Route::get('binary-summary', 'binarySummary')->name('binary.summary');
                 Route::get('/get-user-id-by-username/{username}', 'getUserIdByUsername')->name('getUserIdByUsername');
+                
+                Route::get('/fetch-children/{userId}', 'UserController@fetchChildren')->name('fetch-children');
+                Route::get('/user-details/{userId}', 'UserController@showUserDetails')->name('user-details');
+
 
                 Route::get('attachment-download/{fil_hash}', 'attachmentDownload')->name('attachment.download');
             });

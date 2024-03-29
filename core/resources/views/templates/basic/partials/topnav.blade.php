@@ -1,4 +1,8 @@
 <!-- navbar-wrapper start -->
+<link href="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-Qt9Hug5NfnQDGMoaQYXN1+PiQvda7poO7/6kT8Fk6rC3g3h3qGjw2nA3cQx3uV3F" crossorigin="anonymous">
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js" integrity="sha384-kQtW33rZJAHj6NBkG9nE2BNT1tpP9OgkV2zL+5RLT6IdEU4jHAJdYmbL/XWC/v+R" crossorigin="anonymous"></script>
+
+<!-- Optional JavaScript; choose one of the two! -->
 <nav class="navbar-wrapper bg--white">
     <div class="navbar__left">
         <button type="button" class="res-sidebar-open-btn me-3"><i class="las la-bars"></i></button>
@@ -9,6 +13,12 @@
             <ul class="search-list"></ul>
         </form>
     </div>
+    
+    <div class="" style="padding-left:10px">
+    <a href="{{ route('language.switch', ['lang' => 'en']) }}" style="display: inline-block; padding: 8px 12px; background-color: #00a1ff; color: white; text-align: center; text-decoration: none; border-radius: 5px;">English</a>
+    <a href="{{ route('language.switch', ['lang' => 'cn']) }}" style="display: inline-block; padding: 8px 12px; background-color: #00a1ff; color: white; text-align: center; text-decoration: none; border-radius: 5px;">中文</a>
+    </div>
+    
     <div class="navbar__right">
         <ul class="navbar__action-list">
             <li class="dropdown">

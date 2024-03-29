@@ -10,18 +10,18 @@
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="convertModalLabel">Convert To V2P</h5>
+                <h5 class="modal-title" id="convertModalLabel">{{ __('app.CONVERT TO V2P') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
                 <form id="convertForm">
                   <!-- Input for amount -->
                   <div class="mb-3">
-                    <label for="convertAmount" class="form-label">Amount</label>
+                    <label for="convertAmount" class="form-label">{{ __('app.Amount') }}</label>
                     <input type="number" class="form-control" id="convertAmount" name="amount" required>
                   </div>
                   <!-- Optionally, add other fields here -->
-                  <button type="submit" class="btn btn-primary">Submit</button>
+                  <button type="submit" class="btn btn-primary" style="color:white">{{ __('app.Submit') }}</button>
                 </form>
               </div>
             </div>
@@ -32,21 +32,21 @@
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-header">
-                <h5 class="modal-title" id="transferModalLabel">Transfer V2P</h5>
+                <h5 class="modal-title" id="transferModalLabel" >{{ __('app.BALANCE TRANSFER') }}</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
               </div>
               <div class="modal-body">
                 <form id="transferForm">
                   <!-- Input for amount -->
                   <div class="mb-3">
-                    <label for="transferAmount" class="form-label">Username</label>
+                    <label for="transferAmount" class="form-label">{{ __('app.Username') }}</label>
                     <input type="text" class="form-control" id="username" name="username" required>
                     
-                    <label for="transferAmount" class="form-label">Amount</label>
+                    <label for="transferAmount" class="form-label">{{ __('app.Amount') }}</label>
                     <input type="number" class="form-control" id="transferAmount" name="transferAmount" required>
                   </div>
                   <!-- Optionally, add other fields here -->
-                  <button type="submit" class="btn btn-primary">Submit</button>
+                  <button type="submit" class="btn btn-primary" style="color:white">{{ __('app.Submit') }}</button>
                 </form>
               </div>
             </div>
@@ -78,7 +78,7 @@
         </div>
         @endif
     
-        @foreach ($notices as $notice)
+        {{--@foreach ($notices as $notice)
         <div class="col-12">
             <div class="card">
                 <div class="card-header">{{ __($notice->data_values->title) }}</div>
@@ -87,7 +87,7 @@
                 </div>
             </div>
         </div>
-        @endforeach
+        @endforeach--}}
     
         {{--<div class="col-xxl-3 col-sm-6">
             <x-widget link="{{ route('user.ptc.clicks') }}" icon="las la-mouse-pointer f-size--56" title="Total Clicks"
@@ -156,8 +156,8 @@
                 title="{{ __('app.RP Wallet') }}" value="0" value="{{ $general->cur_sym }}{{ showAmount($data['RP']) }}" color="info" />
         </div>
         <div class="my-3">
-            <div class="btn btn-primary mt-1" data-bs-toggle="modal" data-bs-target="#convertModal">CONVERT TO V2P</div>
-            <div class="btn btn-primary mt-1" data-bs-toggle="modal" data-bs-target="#transferModal">BALANCE TRANSFER</div>
+            <div class="btn btn-primary mt-1" data-bs-toggle="modal" data-bs-target="#convertModal">{{ __('app.CONVERT TO V2P') }}</div>
+            <div class="btn btn-primary mt-1" data-bs-toggle="modal" data-bs-target="#transferModal">{{ __('app.BALANCE TRANSFER') }}</div>
         </div>
 
         <h3 style="margin-top:60px">Summary</h3>

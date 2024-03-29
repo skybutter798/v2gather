@@ -3,10 +3,7 @@
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Route;
-
-Route::get('/clear', function () {
-    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
-});
+use App\Http\Controllers\Admin\LanguageController;
 
 // Route to switch locale
 Route::get('/switch-locale/{locale}', function ($locale) {
@@ -15,6 +12,13 @@ Route::get('/switch-locale/{locale}', function ($locale) {
     return back();
 });
 
+// Corrected route
+Route::get('/language/{lang}', [LanguageController::class, 'switchLang'])->name('language.switch');
+
+
+Route::get('/clear', function () {
+    \Illuminate\Support\Facades\Artisan::call('optimize:clear');
+});
 
 Route::get('cron', 'CronController@cron')->name('cron');
 

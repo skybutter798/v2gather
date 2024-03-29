@@ -136,12 +136,12 @@
                         </ul>
                     </div>
                 </li>
-                <li class="sidebar-menu-item {{ menuActive('user.twofactor') }}">
+                {{--<li class="sidebar-menu-item {{ menuActive('user.twofactor') }}">
                     <a href="{{ route('user.twofactor') }}" class="nav-link">
                         <i class="menu-icon las la-shield-alt"></i>
                         <span class="menu-title">@lang('app.2FA Security')</span>
                     </a>
-                </li>
+                </li>--}}
                 <li class="sidebar-menu-item {{ menuActive('ticket*') }}">
                     <a href="{{ route('ticket.index') }}" class="nav-link">
                         <i class="menu-icon las la-ticket-alt"></i>
