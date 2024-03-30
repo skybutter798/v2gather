@@ -18,11 +18,12 @@ class PlanController extends Controller
 	    $user    = auth()->user();
 
 		$pageTitle       = "Plans";
-		$plans           = Plan::active()->orderBy('price')->paginate(getPaginate());
+		$plans = Plan::active()->where('name', '=', 'V100')->orderBy('price')->paginate(getPaginate());
+		$plans300 = Plan::active()->where('name', '=', 'V300')->orderBy('price')->paginate(getPaginate());
 		$gatewayCurrency = GatewayCurrency::whereHas('method', function ($gate) {
 			$gate->where('status', 1);
 		})->with('method')->orderby('name')->get();
-		return view($this->activeTemplate . 'user.plan.index', compact('pageTitle', 'plans', 'gatewayCurrency', 'user'));
+		return view($this->activeTemplate . 'user.plan.index', compact('pageTitle', 'plans', 'gatewayCurrency', 'user', 'plans300'));
 	}
 
 	public function subscribe(Request $request)
@@ -98,6 +99,71 @@ class PlanController extends Controller
 		}
 
 		$mlm->referralCommission();
+
+		$notify[] = ["success", 'Plan purchased successfully'];
+		return to_route('user.home')->withNotify($notify);
+	}
+	
+	public function subscribev300(Request $request)
+	{
+		$request->validate([
+			
+			'rp'          => 'required',
+			'v2p' => 'required|numeric',
+		]);
+
+		$user = auth()->user();
+		$oldPlan = $user->plan_3;
+        $planPrice = 300;
+        $maxRpUsage = $planPrice * 0.1;
+        $rpInput = min($request->rp, $maxRpUsage);
+        $v2pInput = min($request->v2p, $planPrice - $rpInput);
+
+		if ($oldPlan) {
+			$notify[] = ['error', 'You are ready subscribe this plan'];
+			return back()->withNotify($notify);
+		}
+
+        // Check if user has enough RP and V2P
+        if ($user->RP < $rpInput || $user->V2P < $v2pInput) {
+            $notify[] = ['error', 'Insufficient RP or V2P balance.'];
+            return back()->withNotify($notify);
+        }
+        
+        // Deduct the RP and V2P from user's account
+        $user->RP -= $rpInput;
+        $user->V2P -= $v2pInput;
+		$user->plan_3 = 1;
+		$user->total_invest += $planPrice;
+		$user->daily_ad_limit = 0;
+		$user->save();
+
+		$transaction               = new Transaction();
+		$transaction->user_id      = $user->id;
+		$transaction->amount       = $planPrice;
+		$transaction->post_balance = $v2pInput;
+		$transaction->trx_type     = '-';
+		$transaction->details      = 'Purchased V300';
+		$transaction->trx          = getTrx();
+		$transaction->remark       = 'purchased_plan';
+		$transaction->save();
+
+		notify($user, 'PLAN_PURCHASED', [
+			'plan'         => 'V300',
+			'amount'       => getAmount($planPrice),
+			'currency'     => gs()->cur_text,
+			'trx'          => $transaction->trx,
+			'post_balance' => getAmount($v2pInput) . ' ' . gs()->cur_text,
+		]);
+
+		//$mlm = new Mlm($user, $plan, $transaction->trx);
+		//$mlm->updateBv();
+
+		//if ($plan->tree_com > 0) {
+		//	$mlm->treeCommission();
+		//}
+
+		//$mlm->referralCommission();
 
 		$notify[] = ["success", 'Plan purchased successfully'];
 		return to_route('user.home')->withNotify($notify);

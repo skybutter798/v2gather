@@ -12,7 +12,7 @@
   	position: relative;
   	border-radius: 50%;
   	background-color: none !important;
-  	border: none;
+  	
   	-webkit-appearance: initial !important;
   }
 
@@ -66,9 +66,9 @@
   	display: none;
   }
 
-  .llll:last-child .line {
+  /*.llll:last-child .line {
   	border: none;
-  }
+  }*/
 
   .w-1 {
   	width: 100%;
@@ -360,17 +360,6 @@
   	z-index: 2;
   }
 
-  .paid-user {
-  	border: none;
-  }
-
-  .free-user {
-  	border: none;
-  }
-
-  .no-user {
-  	border: none;
-  }
 
   .user-details-modal-area .modal-body {
   	padding: 0;

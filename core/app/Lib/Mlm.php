@@ -518,9 +518,7 @@ class Mlm
     
         return $children;
     }
-
-
-
+    
     /**
      * Get single user in tree
      *

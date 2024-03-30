@@ -61,7 +61,14 @@
                 <li class="sidebar-menu-item {{ menuActive('user.myTree') }}">
                     <a href="{{ route('user.myTree') }}" class="nav-link">
                         <i class="menu-icon las la-tree"></i>
-                        <span class="menu-title">@lang('app.My Tree')</span>
+                        <span class="menu-title">@lang('app.V100 Tree')</span>
+                    </a>
+                </li>
+                
+                <li class="sidebar-menu-item {{ menuActive('user.v300') }}">
+                    <a href="{{ route('user.v300') }}" class="nav-link">
+                        <i class="menu-icon las la-tree"></i>
+                        <span class="menu-title">@lang('app.V300 Tree')</span>
                     </a>
                 </li>
 

@@ -529,6 +529,14 @@ class UserController extends Controller
         $tree      = $mlm->showTreePage(auth()->user());
         return view($this->activeTemplate . 'user.referral.my_ref', compact('pageTitle', 'mlm', 'tree'));
     }
+    
+    public function v300()
+    {
+        $pageTitle = "V300 Tree";
+        $mlm       = new Mlm();
+        $tree      = $mlm->showTreePage(auth()->user());
+        return view($this->activeTemplate . 'user.referral.v300', compact('pageTitle', 'mlm', 'tree'));
+    }
 
     public function binarySummary()
     {

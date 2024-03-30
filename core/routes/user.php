@@ -86,6 +86,7 @@ Route::middleware('auth')->name('user.')->group(function () {
                 
                 Route::get('/fetch-children/{userId}', 'UserController@fetchChildren')->name('fetch-children');
                 Route::get('/user-details/{userId}', 'UserController@showUserDetails')->name('user-details');
+                Route::get('v300', 'v300')->name('v300');
 
 
                 Route::get('attachment-download/{fil_hash}', 'attachmentDownload')->name('attachment.download');
@@ -95,6 +96,7 @@ Route::middleware('auth')->name('user.')->group(function () {
             Route::controller('PlanController')->prefix('plan')->name('plan.')->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::post('subscribe', 'subscribe')->name('subscribe');
+                Route::post('subscribev300', 'subscribev300')->name('subscribev300');
                 Route::get('bv-log', 'bvLog')->name('bvLog');
             });
 

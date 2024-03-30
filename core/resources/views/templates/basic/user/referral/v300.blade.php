@@ -322,9 +322,9 @@ $(document).ready(function() {
     
         // Check if the user object exists and set the planLabel accordingly
         if (user) {
-            if (user.plan_id === 1) {
-                planLabel = '<span class="badge bg-success">v100</span>'; // If plan_id is 1
-            } else if (user.plan_id === 0) {
+            if (user.plan_3 === 1) {
+                planLabel = '<span class="badge bg-success">v300</span>'; // If plan_id is 1
+            } else if (user.plan_3 === 0) {
                 planLabel = '<span class="badge bg-secondary">none</span>'; // If plan_id is 0
             }
         }
