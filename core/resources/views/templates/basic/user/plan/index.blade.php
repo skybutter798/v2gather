@@ -30,7 +30,7 @@
                                             {{ $general->cur_sym }}{{ showAmount($plan->ref_com) }}
                                         </span>
                                     </div>
-                                    <span class="plan-icon" data-title="@lang('Referral Commission info')" data-info="@lang('When your referred user subscribe in') <b> @lang('ANY PLAN')</b>, @lang('you will get this amount'). ">
+                                    <span class="plan-icon" data-title="@lang('Referral Commission')" data-info="@lang('app.When your referred user subscribe in PLAN, you will get this amount.')">
                                         <i class="fas fa-question-circle"></i>
                                     </span>
                                 </li>
@@ -88,7 +88,7 @@
                             <li class="justify-content-between plan-card-item d-flex">
                                 <div>
                                     <i class="fas fa-check bg--success"></i>
-                                    <span> Pairing Bonus (PB): 300</span>
+                                    <span>@lang('app.Business Volume (PB)'): 300</span>
                                 </div>
                                 <span class="plan-icon" data-title="@lang('app.Business Volume (BV) info')" data-info="@lang('app.When someone from your below tree subscribe this plan, You will get this Business Volume  which will be used for matching bonus')">
                                     <i class="fas fa-question-circle"></i>
@@ -97,9 +97,9 @@
                             <li class="justify-content-between plan-card-item d-flex">
                                 <div>
                                     <i class="fas fa-check bg--success"></i>
-                                    <span>Referral Commission: $150.00</span>
+                                    <span>@lang('app.Referral Comission'): $150.00</span>
                                 </div>
-                                <span class="plan-icon" data-title="@lang('Referral Commission info')" data-info="@lang('When your referred user subscribe in') <b> @lang('ANY PLAN')</b>, @lang('you will get this amount'). ">
+                                <span class="plan-icon" data-title="@lang('Referral Commission')" data-info="@lang('app.When your referred user subscribe in PLAN, you will get this amount.')">
                                     <i class="fas fa-question-circle"></i>
                                 </span>
                             </li>
@@ -155,15 +155,15 @@
                             @if (auth()->user()->plan_id)
                                 <code class="d-block">@lang('If you subscribe to this one. Your old limitation will reset according to this package.')</code>
                             @endif
-                            <label>@lang('Current Balance')</label>
+                            <label>@lang('app.Current Balance')</label>
                             <p><strong>V2P: {{ number_format($user->V2P, 2) }} | RP: {{ number_format($user->RP, 2) }} | WP: {{ number_format($user->balance, 2) }}</strong></p>
                             <br>
                             <div class="form-group">
-                                <label>@lang('Use RP (Max 10% of Plan Price)')</label>
+                                <label>@lang('app.Use RP (Max 10% of Plan Price)')</label>
                                 <input type="number" class="form-control" name="rp" id="rpInput" placeholder="0" max="{{ $plan->price * 0.1 }}" required>
                             </div>
                             <div class="form-group">
-                                <label>@lang('Use V2P (Up to 100% of Plan Price)')</label>
+                                <label>@lang('app.Use V2P (Up to 100% of Plan Price)')</label>
                                 <input type="number" class="form-control" name="v2p" id="v2pInput" placeholder="0" required readonly>
                             </div>
                             <input type="hidden" id="planPrice" value="{{ $plan->price }}">
@@ -172,7 +172,7 @@
                                 = <span class="rate"></span> <span class="method_currency"></span></code>
                         </div>
                         <div class="form-group">
-                            <label>@lang('Invest Amount')</label>
+                            <label>@lang('app.Invest Amount')</label>
                             <div class="input-group">
                                 <input type="number" step="any" class="form-control form--control" name="amount" required>
                                 <span class="input-group-text text-white bg--primary border-0">{{ $general->cur_text }}</span>
@@ -224,15 +224,15 @@
                             </ul>
                         </div>
                         <div class="form-group">
-                            <label>@lang('Current Balance')</label>
+                            <label>@lang('app.Current Balance')</label>
                             <p><strong>V2P: {{ number_format($user->V2P, 2) }} | RP: {{ number_format($user->RP, 2) }} | WP: {{ number_format($user->balance, 2) }}</strong></p>
                             <br>
                             <div class="form-group">
-                                <label>@lang('Use RP (Max 10% of Plan Price)')</label>
+                                <label>@lang('app.Use RP (Max 10% of Plan Price)')</label>
                                 <input type="number" class="form-control" name="rp" id="rpInputv300" placeholder="0" max="{{ 300 * 0.1 }}" required>
                             </div>
                             <div class="form-group">
-                                <label>@lang('Use V2P (Up to 100% of Plan Price)')</label>
+                                <label>@lang('app.Use V2P (Up to 100% of Plan Price)')</label>
                                 <input type="number" class="form-control" name="v2p" id="v2pInputv300" placeholder="0" required readonly>
                             </div>
                             <input type="hidden" id="planPrice" value="300">
@@ -241,7 +241,7 @@
                                 = <span class="rate"></span> <span class="method_currency"></span></code>
                         </div>
                         <div class="form-group">
-                            <label>@lang('Invest Amount')</label>
+                            <label>@lang('app.Invest Amount')</label>
                             <div class="input-group">
                                 <input type="number" step="any" class="form-control form--control" name="amount" value="300" required readonly>
                                 <span class="input-group-text text-white bg--primary border-0">{{ $general->cur_text }}</span>

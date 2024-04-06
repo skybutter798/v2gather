@@ -285,8 +285,12 @@ class UserController extends Controller
     
         // Validate that the user has enough balance
         if ($amount > $user->balance) {
-            Log::warning('Conversion failed due to insufficient balance', ['user_id' => $user->id, 'attempted_amount' => $amount]);
-             return response()->json(['error' => 'Insufficient balance.'], 422); // 422 Unprocessable Entity
+            Log::channel('transaction')->warning('Conversion failed due to insufficient balance', [
+                'user_id' => $user->id, 
+                'attempted_amount' => $amount,
+                'balance' => $user->balance, // Including current balance for better context
+            ]);
+            return response()->json(['error' => 'Insufficient balance.'], 422); // 422 Unprocessable Entity
         }
     
         // Deduct the amount from the user's current balance and add to V2P
@@ -296,58 +300,70 @@ class UserController extends Controller
     
         $trx = getTrx(); // Assuming getTrx() is a method to generate a unique transaction ID
     
-        // Log the conversion
-        Log::info('Balance conversion initiated', ['user_id' => $user->id, 'amount' => $amount, 'trx_id' => $trx]);
+        // Log the conversion attempt
+        Log::channel('transaction')->info('Balance conversion initiated', [
+            'user_id' => $user->id, 
+            'amount' => $amount, 
+            'trx_id' => $trx,
+            'balance' => $user->balance, // Log the balance after deduction
+            'V2P' => $user->V2P, // Log the V2P balance after addition
+        ]);
     
         // Record the transaction for deducting the balance
         $transaction = new Transaction();
         $transaction->fill([
-            'user_id'      => $user->id,
-            'amount'       => $amount,
+            'user_id' => $user->id,
+            'amount' => $amount,
             'post_balance' => $user->balance,
-            'charge'       => 0,
-            'trx_type'     => '-',
-            'details'      => 'Balance convert to V2P',
-            'trx'          => $trx,
-            'remark'       => 'convert_sent',
+            'charge' => 0,
+            'trx_type' => '-',
+            'details' => 'Balance convert to V2P',
+            'trx' => $trx,
+            'remark' => 'convert_sent',
         ]);
         $transaction->save();
     
         // Notify the user about the balance deduction
         notify($user, 'BAL_SEND', [
-            'amount'      => $amount,
-            'username'    => $user->username,
-            'trx'         => $trx,
-            'currency'    => gs()->cur_text,
-            'charge'      => 0,
+            'amount' => $amount,
+            'username' => $user->username,
+            'trx' => $trx,
+            'currency' => gs()->cur_text,
+            'charge' => 0,
             'balance_now' => getAmount($user->balance),
         ]);
     
         // Record the transaction for adding to V2P
         $transactionV2P = new Transaction();
         $transactionV2P->fill([
-            'user_id'      => $user->id,
-            'amount'       => $amount,
+            'user_id' => $user->id,
+            'amount' => $amount,
             'post_balance' => $user->V2P,
-            'trx_type'     => '+',
-            'details'      => 'V2P convert from WP',
-            'trx'          => $trx,
-            'remark'       => 'convert_receive',
+            'trx_type' => '+',
+            'details' => 'V2P convert from WP',
+            'trx' => $trx,
+            'remark' => 'convert_receive',
         ]);
         $transactionV2P->save();
     
         // Notify the user about the V2P balance addition
         notify($user, 'BAL_RECEIVE', [
-            'amount'      => $amount,
-            'currency'    => gs()->cur_text,
-            'trx'         => $trx,
-            'username'    => $user->username,
-            'charge'      => 0,
+            'amount' => $amount,
+            'currency' => gs()->cur_text,
+            'trx' => $trx,
+            'username' => $user->username,
+            'charge' => 0,
             'balance_now' => getAmount($user->V2P),
         ]);
     
         // Log the successful conversion
-        Log::info('Balance conversion successful', ['user_id' => $user->id, 'amount' => $amount, 'trx_id' => $trx]);
+        Log::channel('transaction')->info('Balance conversion successful', [
+            'user_id' => $user->id, 
+            'amount' => $amount, 
+            'trx_id' => $trx,
+            'newBalance' => $user->balance, // Including this detail for completeness
+            'newV2P' => $user->V2P, // Including V2P balance for completeness
+        ]);
     
         return response()->json(['success' => 'Balance transferred successfully.', 'newBalance' => $user->balance, 'newV2P' => $user->V2P]);
     }
@@ -363,14 +379,17 @@ class UserController extends Controller
         $transferUser = User::where('username', $request->username)->orWhere('email', $request->username)->first();
     
         if (!$transferUser) {
-            $notify[] = ['error', 'User not found'];
-            Log::warning('Balance transfer failed: User not found', ['requested_username' => $request->username]);
+            Log::channel('transaction')->warning('Balance transfer failed: User not found', [
+                'requested_username' => $request->username,
+                'initiator_user_id' => $user->id,
+            ]);
             return response()->json(['error' => 'User not found'], 422);
         }
     
         if ($user->id == $transferUser->id) {
-            $notify[] = ['error', 'Balance transfer not possible in your own account'];
-            Log::warning('Balance transfer failed: Self transfer attempt', ['user_id' => $user->id]);
+            Log::channel('transaction')->warning('Balance transfer failed: Self transfer attempt', [
+                'user_id' => $user->id,
+            ]);
             return response()->json(['error' => 'Balance transfer not possible in your own account'], 422);
         }
     
@@ -378,142 +397,165 @@ class UserController extends Controller
         $totalAmount = $request->amount + $charge;
     
         if ($totalAmount > $user->V2P) {
-            $notify[] = ['error', 'Insufficient balance.'];
-            Log::warning('Balance transfer failed: Insufficient balance', ['user_id' => $user->id, 'required' => $totalAmount, 'available' => $user->V2P]);
+            Log::channel('transaction')->warning('Balance transfer failed: Insufficient balance', [
+                'user_id' => $user->id,
+                'required_amount' => $totalAmount,
+                'available_V2P' => $user->V2P,
+            ]);
             return response()->json(['error' => 'Insufficient balance.'], 422);
         }
     
         $user->V2P -= $totalAmount;
         $user->save();
-
+    
         $trx = getTrx();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $request->amount;
+    
+        // Record the deduction transaction
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->amount = $request->amount;
         $transaction->post_balance = $user->balance;
-        $transaction->charge       = $charge;
-        $transaction->trx_type     = '-';
-        $transaction->details      = 'V2P transferred to ' . $transferUser->username;
-        $transaction->trx          = $trx;
-        $transaction->remark       = 'v2p_transfer';
-        $transaction->save();
-        
-        $transferUser->V2P += $request->amount;
-        $transferUser->save();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $transferUser->id;
-        $transaction->amount       = $request->amount;
-        $transaction->post_balance = $transferUser->balance;
-        $transaction->trx_type     = '+';
-        $transaction->details      = 'V2P received form   ' . $user->username;
-        $transaction->trx          = $trx;
-        $transaction->remark       = 'v2p_receive';
+        $transaction->charge = $charge;
+        $transaction->trx_type = '-';
+        $transaction->details = 'V2P transferred to ' . $transferUser->username;
+        $transaction->trx = $trx;
+        $transaction->remark = 'v2p_transfer';
         $transaction->save();
     
-        Log::info('Balance transfer successful', [
+        $transferUser->V2P += $request->amount;
+        $transferUser->save();
+    
+        // Record the addition transaction for the receiver
+        $transaction = new Transaction();
+        $transaction->user_id = $transferUser->id;
+        $transaction->amount = $request->amount;
+        $transaction->post_balance = $transferUser->balance;
+        $transaction->trx_type = '+';
+        $transaction->details = 'V2P received from ' . $user->username;
+        $transaction->trx = $trx;
+        $transaction->remark = 'v2p_receive';
+        $transaction->save();
+    
+        Log::channel('transaction')->info('Balance transfer successful', [
             'from_user_id' => $user->id,
             'to_user_id' => $transferUser->id,
             'amount' => $request->amount,
             'charge' => $charge,
             'total_amount' => $totalAmount,
+            'transaction_id' => $trx, // Including the transaction ID for tracking
         ]);
     
         $notify = [
             'type' => 'success',
             'message' => 'Operation successful!',
         ];
-        
+    
         return response()->json([
             'notify' => $notify
         ]);
     }
 
-
     public function transfer(Request $request)
     {
-
         if (gs()->balance_transfer == Status::NO) {
             $notify[] = ['error', 'Balance transfer currently off by system. Please try again later'];
+            Log::channel('transaction')->warning('Balance transfer attempt blocked by system settings.', [
+                'user_id' => auth()->id(),
+            ]);
             return back()->withNotify($notify);
         }
-
+    
         $request->validate([
             'username' => 'required',
             'amount'   => 'required|numeric|gte:0',
         ]);
-
+    
         $user         = auth()->user();
         $transferUser = User::where('username', $request->username)->orWhere('email', $request->username)->first();
-
+    
         if (!$transferUser) {
             $notify[] = ['error', 'User not found'];
+            Log::channel('transaction')->warning('Balance transfer failed: User not found', [
+                'initiator_user_id' => $user->id,
+                'requested_username' => $request->username,
+            ]);
             return back()->withNotify($notify)->withInput();
         }
-
+    
         if ($user->id == $transferUser->id) {
             $notify[] = ['error', 'Balance transfer not possible in your own account'];
+            Log::channel('transaction')->warning('Balance transfer failed: Self transfer attempt', [
+                'user_id' => $user->id,
+            ]);
             return back()->withNotify($notify)->withInput();
         }
-
-        $charge      = gs()->balance_transfer_fixed_charge + (($request->amount * gs()->balance_transfer_percent_charge) / 100);
+    
+        $charge = gs()->balance_transfer_fixed_charge + (($request->amount * gs()->balance_transfer_percent_charge) / 100);
         $totalAmount = $request->amount + $charge;
-
+    
         if ($totalAmount > $user->balance) {
             $notify[] = ['error', 'Insufficient balance.'];
+            Log::channel('transaction')->warning('Balance transfer failed: Insufficient balance', [
+                'user_id' => $user->id,
+                'amount_requested' => $request->amount,
+                'charge' => $charge,
+                'total_amount' => $totalAmount,
+                'balance' => $user->balance,
+            ]);
             return back()->withNotify($notify);
         }
-
+    
         $user->balance -= $totalAmount;
         $user->save();
-
+    
         $trx = getTrx();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $user->id;
-        $transaction->amount       = $request->amount;
+    
+        $transaction = new Transaction();
+        $transaction->user_id = $user->id;
+        $transaction->amount = $request->amount;
         $transaction->post_balance = $user->balance;
-        $transaction->charge       = $charge;
-        $transaction->trx_type     = '-';
-        $transaction->details      = 'Balance transferred to ' . $transferUser->username;
-        $transaction->trx          = $trx;
-        $transaction->remark       = 'transfer';
+        $transaction->charge = $charge;
+        $transaction->trx_type = '-';
+        $transaction->details = 'Balance transferred to ' . $transferUser->username;
+        $transaction->trx = $trx;
+        $transaction->remark = 'transfer';
         $transaction->save();
-
-        notify($user, 'BAL_SEND', [
-            'amount'      => getAmount($request->amount),
-            'username'    => $transferUser->username,
-            'trx'         => $transaction->trx,
-            'currency'    => gs()->cur_text,
-            'charge'      => getAmount($charge),
-            'balance_now' => getAmount($user->balance),
+    
+        // Logging the deduction part of the transfer
+        Log::channel('transaction')->info('Balance transferred', [
+            'from_user_id' => $user->id,
+            'to_user_id' => $transferUser->id,
+            'amount' => $request->amount,
+            'charge' => $charge,
+            'total_amount_deducted' => $totalAmount,
+            'transaction_id' => $trx,
         ]);
-
+    
         $transferUser->balance += $request->amount;
         $transferUser->save();
-
-        $transaction               = new Transaction();
-        $transaction->user_id      = $transferUser->id;
-        $transaction->amount       = $request->amount;
+    
+        $transaction = new Transaction();
+        $transaction->user_id = $transferUser->id;
+        $transaction->amount = $request->amount;
         $transaction->post_balance = $transferUser->balance;
-        $transaction->trx_type     = '+';
-        $transaction->details      = 'Balance received form   ' . $user->username;
-        $transaction->trx          = $trx;
-        $transaction->remark       = 'balance_receive';
+        $transaction->trx_type = '+';
+        $transaction->details = 'Balance received from ' . $user->username;
+        $transaction->trx = $trx;
+        $transaction->remark = 'balance_receive';
         $transaction->save();
-
-        notify($transferUser, 'BAL_RECEIVE', [
-            'amount'      => getAmount($request->amount),
-            'currency'    => gs()->cur_text,
-            'trx'         => $trx,
-            'username'    => $user->username,
-            'charge'      => 0,
-            'balance_now' => getAmount($transferUser->balance),
+    
+        // Logging the addition part of the transfer
+        Log::channel('transaction')->info('Balance received', [
+            'to_user_id' => $transferUser->id,
+            'from_user_id' => $user->id,
+            'amount' => $request->amount,
+            'transaction_id' => $trx,
         ]);
+    
         $notify[] = ['success', 'Balance transferred successfully.'];
         return back()->withNotify($notify);
     }
+
 
     public function referral()
     {
@@ -600,6 +642,12 @@ class UserController extends Controller
             'user' => $user->toArray(),
             'referrerUsername' => $referrerUsername,
         ]);
+    }
+    
+    public function merchant()
+    {
+        $pageTitle = "Merchant";
+        return view($this->activeTemplate . 'user.merchant.index', compact('pageTitle'));
     }
 
 

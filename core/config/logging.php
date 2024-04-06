@@ -62,7 +62,7 @@ return [
 
         'daily' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/laravel.log'),
+            'path' => storage_path('logs/laravel/laravel.log'), // Adjust the path to include a directory for better organization
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
         ],
@@ -113,6 +113,28 @@ return [
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+        
+        // Define a new daily channel for transaction logs
+        'transaction' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/transaction/transaction.log'), // Store transaction logs in their own directory
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14, // Retain logs for 14 days, adjust as needed
+        ],
+        
+        'plan' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/plan/plan.log'), // Store transaction logs in their own directory
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14, // Retain logs for 14 days, adjust as needed
+        ],
+        
+        'bv' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/bv/bv.log'), // Store transaction logs in their own directory
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14, // Retain logs for 14 days, adjust as needed
         ],
     ],
 

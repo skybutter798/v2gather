@@ -7,6 +7,8 @@ use App\Models\BvLog;
 use App\Models\Transaction;
 use App\Models\User;
 
+use Illuminate\Support\Facades\Log;
+
 class Mlm
 {
     /**
@@ -94,43 +96,60 @@ class Mlm
     {
         $user = $this->user;
         $bv   = $this->plan->bv;
-
-        while (0 == 0) {
+        $initiatorUsername = auth()->user()->username; // Store initiator's username for logging
+    
+        while (true) {
             $upper = User::where('id', $user->pos_id)->first();
-
-
+    
             if (!$upper) {
+                Log::channel('plan')->info('BV update reached top of the chain.', [
+                    'initiator_username' => $initiatorUsername,
+                    'last_user_id' => $user->id,
+                ]);
                 break;
             }
-
+    
             if ($upper->plan_id == 0) {
                 $user = $upper;
                 continue;
             }
-
+    
             $upperUserPlan = $upper->plan;
-
+    
             if(!$upperUserPlan){
                 $user = $upper;
                 continue;
             }
-
-
+    
             if ($this->setting->dispatch_commission_module == Status::DISPATCH_COMMISSION_LOWER_PLAN) {
-
                 if ($bv > $upperUserPlan->bv) {
+                    $originalBv = $bv;
                     $bv = $upperUserPlan->bv;
+                    Log::channel('plan')->info('Adjusting BV to upper user’s lower plan BV.', [
+                        'initiator_username' => $initiatorUsername,
+                        'current_user_id' => $user->id,
+                        'upper_user_id' => $upper->id,
+                        'original_bv' => $originalBv,
+                        'adjusted_bv' => $bv,
+                    ]);
                 }
             } elseif ($this->setting->dispatch_commission_module == Status::DISPATCH_COMMISSION_SELF_PLAN) {
-
+                $originalBv = $bv;
                 $bv = $upperUserPlan->bv;
+                Log::channel('plan')->info('Adjusting BV to upper user’s plan BV (Self plan module).', [
+                    'initiator_username' => $initiatorUsername,
+                    'current_user_id' => $user->id,
+                    'upper_user_id' => $upper->id,
+                    'original_bv' => $originalBv,
+                    'adjusted_bv' => $bv,
+                ]);
             }
-
-            $bvlog           = new BvLog();
-            $bvlog->user_id  = $upper->id;
+    
+            $bvlog = new BvLog();
+            $bvlog->user_id = $upper->id;
             $bvlog->trx_type = '+';
-            $extra           = $upper->userExtra;
-
+            $extra = $upper->userExtra;
+    
             if ($user->position == 1) {
                 $extra->bv_left += $bv;
                 $bvlog->position = '1';
@@ -138,16 +157,77 @@ class Mlm
                 $extra->bv_right += $bv;
                 $bvlog->position = '2';
             }
-
+    
             $extra->save();
-            $bvlog->amount  = $bv;
-            $bvlog->details = 'PB from ' . auth()->user()->username;
+            $bvlog->amount = $bv;
+            $bvlog->details = 'PB from ' . $initiatorUsername;
             $bvlog->save();
-
+    
+            Log::channel('plan')->info('BV successfully updated.', [
+                'initiator_username' => $initiatorUsername,
+                'upper_user_id' => $upper->id,
+                'bv_added' => $bv,
+                'position' => $bvlog->position,
+            ]);
+    
             $user = $upper;
         }
     }
 
+    
+    public function updateBv300()
+    {
+        $user = $this->user;
+        $bv = $this->plan->bv;
+        Log::channel('plan')->info('Starting updateBv300 for user: ' . $user->id . ' with initial bv: ' . $bv);
+    
+        while (true) {
+            $upper = User::where('id', $user->pos_id)->first();
+    
+            if (!$upper) {
+                Log::channel('plan')->info('No upper user found, breaking loop.');
+                break;
+            }
+    
+            if ($upper->plan_3 == 0) {
+                Log::channel('plan')->info('Upper user (' . $upper->id . ') does not have plan_3, continuing.');
+                $user = $upper;
+                continue;
+            }
+    
+            $upperUserPlan = $upper->plan_3;
+            Log::channel('plan')->info('Upper user (' . $upper->id . ') plan_3 status: ' . $upperUserPlan);
+    
+            // Assuming the rest of the logic for dispatch commission module adjustments goes here
+    
+            $bvlog = new BvLog();
+            $bvlog->user_id = $upper->id;
+            $bvlog->trx_type = '+';
+    
+            $extra = $upper->userExtra; // Ensure userExtra is correctly fetched
+    
+            if ($user->position == 1) {
+                $extra->bv_left += $bv;
+                $bvlog->position = '1';
+                Log::channel('plan')->info('Adding bv to bv_left for user ' . $upper->id);
+            } else {
+                $extra->bv_right += $bv;
+                $bvlog->position = '2';
+                Log::channel('plan')->info('Adding bv to bv_right for user ' . $upper->id);
+            }
+    
+            // Proceed with saving
+            $extra->save();
+            $bvlog->amount = $bv;
+            $bvlog->details = 'PB from ' . auth()->user()->username;
+            $bvlog->save();
+            Log::channel('plan')->info('Saved BvLog and UserExtra for user ' . $upper->id . ' with bv: ' . $bv);
+    
+            $user = $upper;
+        }
+    }
+
+    
     /**
      * Give referral commission to immediate referrer
      *
@@ -159,15 +239,38 @@ class Mlm
         $referrer = $user->referrer;
         $refPlan = @$referrer->plan;
     
+        if (!$referrer) {
+            Log::channel('plan')->info('Referral commission skipped: User has no referrer.', [
+                'user_id' => $user->id,
+            ]);
+            return;
+        }
+    
         if ($refPlan) {
             $totalAmount = $this->plan->ref_com;
+    
+            Log::channel('plan')->info('Initial referral commission calculated.', [
+                'user_id' => $user->id,
+                'referrer_id' => $referrer->id,
+                'initial_amount' => $totalAmount,
+            ]);
     
             if ($this->setting->dispatch_commission_module == Status::DISPATCH_COMMISSION_LOWER_PLAN) {
                 if ($totalAmount > $refPlan->ref_com) {
                     $totalAmount = $refPlan->ref_com;
+                    Log::channel('plan')->info('Referral commission adjusted to referrer\'s plan commission (Lower Plan).', [
+                        'user_id' => $user->id,
+                        'referrer_id' => $referrer->id,
+                        'adjusted_amount' => $totalAmount,
+                    ]);
                 }
             } elseif ($this->setting->dispatch_commission_module == Status::DISPATCH_COMMISSION_SELF_PLAN) {
                 $totalAmount = $refPlan->ref_com;
+                Log::channel('plan')->info('Referral commission matched to referrer\'s plan commission (Self Plan).', [
+                    'user_id' => $user->id,
+                    'referrer_id' => $referrer->id,
+                    'matched_amount' => $totalAmount,
+                ]);
             }
     
             // Calculate the distribution
@@ -177,8 +280,8 @@ class Mlm
     
             // Update the referrer's balance, RP, and EP
             $referrer->balance += $amountToBalance;
-            $referrer->RP += $amountToRP; // Assuming RP is the field name for Reward Points
-            $referrer->EP += $amountToEP; // Assuming EP is the field name for Earning Points
+            $referrer->RP += $amountToRP;
+            $referrer->EP += $amountToEP;
             $referrer->total_ref_com += $totalAmount;
             $referrer->save();
     
@@ -194,18 +297,99 @@ class Mlm
             $transaction->remark = 'referral_commission';
             $transaction->save();
     
+            Log::channel('plan')->info('Referral commission processed and distributed.', [
+                'referrer_id' => $referrer->id,
+                'amount_to_balance' => $amountToBalance,
+                'amount_to_RP' => $amountToRP,
+                'amount_to_EP' => $amountToEP,
+                'transaction_id' => $trx,
+            ]);
+    
             notify($referrer, 'REFERRAL_COMMISSION', [
                 'amount' => showAmount($totalAmount),
                 'username' => $user->username,
                 'post_balance' => $referrer->balance,
-                'RP' => showAmount($amountToRP), // Add RP to the notification
-                'EP' => showAmount($amountToEP), // Add EP to the notification
+                'RP' => showAmount($amountToRP),
+                'EP' => showAmount($amountToEP),
                 'trx' => $trx,
+            ]);
+        } else {
+            Log::channel('plan')->warning('Referral commission calculation skipped: Referrer does not have an active plan.', [
+                'user_id' => $user->id,
+                'referrer_id' => $referrer->id,
             ]);
         }
     }
 
+    public function referralCommission300()
+    {
+        $user = $this->user;
+        $referrer = $user->referrer;
+        $refPlan = $referrer ? $referrer->plan_3 : null;
+        
+        Log::channel('plan')->info('Referrer obtained: ' . ($referrer ? "Yes" : "No"));
+        Log::channel('plan')->info('Referrer plan_3 value: ' . $refPlan);
+    
+        if ($refPlan == 1) {
+            $totalAmount = $this->plan->ref_com;
+            Log::channel('plan')->info('Initial total amount from plan ref_com: ' . $totalAmount);
 
+            // Calculate the distribution
+            $amountToBalance = $totalAmount * 0.7;
+            $amountToRP = $totalAmount * 0.2;
+            $amountToEP = $totalAmount * 0.1;
+            
+            // Update the referrer's balance, RP, and EP
+            $referrer->balance += $amountToBalance;
+            $referrer->RP += $amountToRP;
+            $referrer->EP += $amountToEP;
+            $referrer->total_ref_com += $totalAmount;
+            $referrer->save();
+    
+            Log::channel('plan')->info("Distribution amounts - To Balance: $amountToBalance, To RP: $amountToRP, To EP: $amountToEP");
+    
+            // Assuming this is a simulated update and actual database operations are commented out
+            Log::channel('plan')->info("info updating referrer's balance, RP, and EP without saving");
+            Log::channel('plan')->info("Referrer's new balance: " . ($referrer->balance + $amountToBalance));
+            Log::channel('plan')->info("Referrer's new RP: " . ($referrer->RP + $amountToRP));
+            Log::channel('plan')->info("Referrer's new EP: " . ($referrer->EP + $amountToEP));
+            Log::channel('plan')->info("Referrer's new total referral commission: " . ($referrer->total_ref_com + $totalAmount));
+    
+            $trx = $this->trx;
+            $transaction = new Transaction();
+            $transaction->user_id = $referrer->id;
+            $transaction->amount = $totalAmount;
+            $transaction->post_balance = $referrer->balance;
+            $transaction->charge = 0;
+            $transaction->trx_type = '+';
+            $transaction->details = 'Direct referral commission from ' . $user->username;
+            $transaction->trx = $trx;
+            $transaction->remark = 'referral_commission';
+            $transaction->save();
+    
+            Log::channel('plan')->info('Referral commission processed and distributed.', [
+                'referrer_id' => $referrer->id,
+                'amount_to_balance' => $amountToBalance,
+                'amount_to_RP' => $amountToRP,
+                'amount_to_EP' => $amountToEP,
+                'transaction_id' => $trx,
+            ]);
+    
+            notify($referrer, 'REFERRAL_COMMISSION', [
+                'amount' => showAmount($totalAmount),
+                'username' => $user->username,
+                'post_balance' => $referrer->balance,
+                'RP' => showAmount($amountToRP),
+                'EP' => showAmount($amountToEP),
+                'trx' => $trx,
+            ]);
+        } else {
+            Log::channel('plan')->warning('Referral commission process skipped: Referrer does not have plan_3.', [
+                'user_id' => $user->id,
+                'referrer_id' => $referrer ? $referrer->id : 'N/A',
+            ]);
+        }
+    }
     /**
      * Give tree commission to upper positioner
      *
@@ -382,6 +566,13 @@ class Mlm
             $uex->bv_right -= $paidBv;
             $lostl = 0;
             $lostr = 0;
+            
+            Log::channel('bv')->info('Cut paid BV from both sides', [
+                'user_id' => $user->id,
+                'bv_left' => $uex->bv_left,
+                'bv_right' => $uex->bv_right,
+                'action' => 'cut_paid_bv'
+            ]);
         }
 
         //cut only weaker bv from both
@@ -390,6 +581,13 @@ class Mlm
             $uex->bv_right -= $weak;
             $lostl = $weak - $paidBv;
             $lostr = $weak - $paidBv;
+            
+            Log::channel('bv')->info('Cut only weaker BV from both sides', [
+                'user_id' => $user->id,
+                'bv_left' => $uex->bv_left,
+                'bv_right' => $uex->bv_right,
+                'action' => 'cut_weaker_bv'
+            ]);
         }
 
         //cut all bv from both
@@ -398,6 +596,13 @@ class Mlm
             $uex->bv_right = 0;
             $lostl         = $uex->bv_left - $paidBv;
             $lostr         = $uex->bv_right - $paidBv;
+            
+            Log::channel('bv')->info('Cut all BV from both sides', [
+                'user_id' => $user->id,
+                'bv_left' => $uex->bv_left,
+                'bv_right' => $uex->bv_right,
+                'action' => 'cut_all_bv'
+            ]);
         }
 
         $uex->save();
@@ -417,6 +622,12 @@ class Mlm
                 'trx_type' => '-',
                 'details'  => 'Paid ' . showAmount($bonus) . ' ' . __($general->cur_text) . ' For ' . showAmount($paidBv) . ' BV.',
             ];
+            
+            Log::channel('bv')->info('Logging paid BV transactions', [
+                'user_id' => $user->id,
+                'amount' => $paidBv,
+                'bonus' => $bonus
+            ]);
         }
 
         if ($lostl != 0) {
@@ -427,6 +638,11 @@ class Mlm
                 'trx_type' => '-',
                 'details'  => 'Flush ' . showAmount($lostl) . ' BV after Paid ' . showAmount($bonus) . ' ' . __($general->cur_text) . ' For ' . showAmount($paidBv) . ' BV.',
             ];
+            
+            Log::channel('bv')->info('Logging left side BV flush', [
+                'user_id' => $user->id,
+                'lost_bv' => $lostl
+            ]);
         }
 
         if ($lostr != 0) {
@@ -437,10 +653,18 @@ class Mlm
                 'trx_type' => '-',
                 'details'  => 'Flush ' . showAmount($lostr) . ' BV after Paid ' . showAmount($bonus) . ' ' . __($general->cur_text) . ' For ' . showAmount($paidBv) . ' BV.',
             ];
+            
+            Log::channel('bv')->info('Logging right side BV flush', [
+                'user_id' => $user->id,
+                'lost_bv' => $lostr
+            ]);
         }
 
         if ($bvLog) {
             BvLog::insert($bvLog);
+            Log::channel('bv')->info('Inserted BV log entries', [
+                'entries' => $bvLog
+            ]);
         }
     }
 

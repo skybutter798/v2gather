@@ -8,11 +8,11 @@
                         <table class="table table--light style--two">
                             <thead>
                                 <tr>
-                                    <th>@lang('Sl')</th>
+                                    <th>@lang('app.SL')</th>
                                     <th>@lang('app.BV')</th>
-                                    <th>@lang('Position')</th>
-                                    <th>@lang('Detail')</th>
-                                    <th>@lang('Date')</th>
+                                    <th>@lang('app.Position')</th>
+                                    <th>@lang('app.Detail')</th>
+                                    <th>@lang('app.Date')</th>
                                 </tr>
                             </thead>
                             <tbody>

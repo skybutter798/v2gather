@@ -23,6 +23,7 @@
                     <p class="user-name"><strong>{{ auth()->user()->username }}</strong></p> <!-- Change made here -->
                 </div>
                 <div class="arrow" style="cursor: pointer;">▼</div>
+                <span class="line"></span>
             </div>
         </div>
     </div>
@@ -316,6 +317,82 @@ $(document).ready(function() {
         });
     });
     
+    function fetchAndDisplayChildren($node, level = 1) {
+        var userId = $node.data('spot-id'); // This is correct for the initial call
+        console.log("Fetching children for user ID:", userId, "at level", level);
+    
+        if (level > 3) {
+            console.log("Reached maximum depth at userId " + userId);
+            return;
+        }
+    
+        $.ajax({
+            url: '/user/fetch-children/' + userId,
+            type: 'GET',
+            success: function(response) {
+                console.log("AJAX success response for userId " + userId + ":", response);
+    
+                if (!response.children.left && !response.children.right) {
+                    console.log("Both left and right children are empty for userId " + userId);
+                    return; // No children to process, so exit
+                }
+    
+                var childrenHtml = '<div class="children-container" style="display: flex;">';
+                
+                // Process left child
+                if (response.children.left) {
+                    childrenHtml += generateUserHtml(response.children.left, '1', response.children.left.id);
+                } else {
+                    // If no left child, create an empty spot
+                    childrenHtml += generateUserHtml(null, '1', userId);
+                }
+                
+                // Process right child
+                if (response.children.right) {
+                    childrenHtml += generateUserHtml(response.children.right, '2', response.children.right.id);
+                } else {
+                    // If no right child, create an empty spot
+                    childrenHtml += generateUserHtml(null, '2', userId);
+                }
+                
+                childrenHtml += '</div>';
+                $node.append(childrenHtml).addClass('loaded');
+                updateArrowState($node.find('.arrow'), true);
+    
+                // Recursive call for each non-empty child node, incrementing the level
+                $node.find('.child-node').each(function() {
+                    var childId = $(this).data('spot-id'); // Extract child's ID
+                    // Make sure the childId is defined before attempting to fetch its children
+                    if (typeof childId !== 'undefined') {
+                        fetchAndDisplayChildren($(this), level + 1);
+                    } else {
+                        console.log("Skipping fetch for undefined childId at level", level);
+                    }
+                });
+    
+            },
+            error: function(jqXHR, textStatus, errorThrown) {
+                console.error("AJAX error fetching children for userId " + userId + ":", textStatus, errorThrown);
+            }
+        });
+    }
+    
+    $(document).ready(function() {
+        console.log("Document is ready.");
+    
+        // Assuming your root node has an id="treeRoot"
+        var $rootNode = $('#treeRoot');
+        console.log("Root node length:", $rootNode.length);
+    
+        if ($rootNode.length) {
+            console.log("Fetching and displaying children for root node.");
+            fetchAndDisplayChildren($rootNode, 1);
+        } else {
+            console.log("#treeRoot not found.");
+        }
+    });
+
+    
     function generateUserHtml(user, position, userId) {
         // Initialize planLabel with an empty string
         var planLabel = '';
@@ -354,7 +431,7 @@ $(document).ready(function() {
     
     function updateArrowState($arrow, isVisible) {
         if (isVisible) {
-            $arrow.text('▼');
+            $arrow.text('▲');
         } else {
             $arrow.text('▼');
         }

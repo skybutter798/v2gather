@@ -149,12 +149,22 @@
                         <span class="menu-title">@lang('app.2FA Security')</span>
                     </a>
                 </li>--}}
+                
+                <li class="sidebar-menu-item {{ menuActive('user.merchant*') }}">
+                    <a href="{{ route('user.merchant') }}" class="nav-link">
+                        <i class="menu-icon las la-store"></i>
+                        <span class="menu-title">@lang('app.Merchants')</span>
+                    </a>
+                </li>
+                
                 <li class="sidebar-menu-item {{ menuActive('ticket*') }}">
                     <a href="{{ route('ticket.index') }}" class="nav-link">
                         <i class="menu-icon las la-ticket-alt"></i>
                         <span class="menu-title">@lang('app.Support')</span>
                     </a>
                 </li>
+                
+
                 <li class="sidebar-menu-item {{ menuActive(['user.profile.setting', 'user.change.password']) }}">
                     <a href="{{ route('user.profile.setting') }}" class="nav-link">
                         <i class="menu-icon las la-user"></i>
